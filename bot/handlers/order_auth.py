@@ -1,19 +1,12 @@
-from aiogram import Router, F
 from aiogram.types import Message, ReplyKeyboardRemove
-from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from django.conf import settings
 from main.models import CustomUser,BotSettings
-from bot.keyboards import order_kb
+from aiogram.fsm.context import FSMContext
 from asgiref.sync import sync_to_async
-
+from aiogram.filters import Command
+from bot.keyboards import order_kb
+from aiogram import Router, F
 
 router = Router()
-
-class OrderLogin(StatesGroup):
-    waiting_for_password = State()
-
 @router.message(Command("order"))
 async def cmd_order(message: Message, state: FSMContext, user):
     if user and user.is_order:
@@ -25,9 +18,9 @@ async def cmd_order(message: Message, state: FSMContext, user):
         return
     
     await message.answer("🔐 order parolini kiriting:", reply_markup=ReplyKeyboardRemove())
-    await state.set_state(OrderLogin.waiting_for_password)
+    await state.set_state(order_kb.OrderLogin.waiting_for_password)
 
-@router.message(OrderLogin.waiting_for_password)
+@router.message(order_kb.OrderLogin.waiting_for_password)
 async def process_admin_password(message: Message, state: FSMContext, user):
     admin = await sync_to_async(BotSettings.objects.last)()
     if message.text == admin.order_password:

@@ -1,5 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-
+from aiogram.fsm.state import State, StatesGroup
 def main_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -66,3 +66,14 @@ def confirm_delivery_keyboard():
         [InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="confirm_delivery")],
         [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_delivery")]
     ])
+    
+
+# Faqat yetkazib beruvchilar uchun
+class DelivererStates(StatesGroup):
+    selecting_order = State()
+    updating_status = State()
+    confirming_delivery = State()
+    selecting_client = State()      # mijoz tanlash
+    selecting_order = State()       # savdo ta'rifi kiritish
+    selecting_product = State()     # mahsulot tanlash
+    entering_quantity = State()  

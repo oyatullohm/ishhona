@@ -1,12 +1,11 @@
-from aiogram import Router, F
 from aiogram.types import Message, ReplyKeyboardRemove
-from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from django.conf import settings
 from main.models import CustomUser, BotSettings
+from aiogram.fsm.context import FSMContext
 from bot.keyboards import deliverer_kb
 from asgiref.sync import sync_to_async
+from aiogram.filters import Command
+from aiogram import Router, F
 
 router = Router()
 

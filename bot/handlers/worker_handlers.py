@@ -1,9 +1,9 @@
-from aiogram import Router, F
+from main.models import Product, Production, CustomUser, ProductNotMixed , Balans , Cost #g modellaringiz
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from asgiref.sync import sync_to_async
-from main.models import Product, Production, CustomUser, ProductNotMixed , Balans , Cost #g modellaringiz
 from bot.keyboards.worker_kb import *
+from aiogram import Router, F
 router = Router()
 
 @router.message(F.text == "💴 Balans")
@@ -46,7 +46,6 @@ async def product_not_mixsid_user(message: Message, user, state: FSMContext):
 
     await show_products_page(message, state)
 
-
 async def show_products_page(message: Message, state: FSMContext):
     data = await state.get_data()
     page = data.get('page', 1)
@@ -82,7 +81,6 @@ async def show_products_page(message: Message, state: FSMContext):
 
     await message.answer(text, reply_markup=reply_markup)
     await state.set_state(PaginationStates.viewing_transactions)
-
 
 # Callback handler mahsulotlar uchun paginatsiya
 @router.callback_query(F.data.startswith("prod_prev_") | F.data.startswith("prod_next_"))

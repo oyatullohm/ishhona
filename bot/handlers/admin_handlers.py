@@ -12,10 +12,7 @@ from aiogram import Router, F
 from decimal import Decimal
 from main.models import *
 
-
 router = Router()
-
-
 # === ASOSIY MENYU ===
 @router.message(F.text == "🏠 Admin Bosh Menyu")
 async def admin_menu(message: Message, user, state: FSMContext):
@@ -1660,8 +1657,6 @@ async def save_income(message: Message, state: FSMContext, user: CustomUser):
     )
     await state.clear()
 
-
-
 @router.message(F.text == "📥 Aralashmagan Mahsulot Tarihi")
 async def money_received(message: Message, user, state: FSMContext):
     await state.update_data(page=1)
@@ -2253,13 +2248,8 @@ async def handle_orders_pagination(callback: CallbackQuery, state: FSMContext):
     await show_orders_page(callback.message, state)
     await callback.answer()
 
-class TransferMoneyState(StatesGroup):
-    from_kassa = State()
-    to_kassa = State()
-    amount = State()
 
 
-    
 @router.message(F.text == "💵⏩💴 kassadan kassaga")
 async def transfer_money(message: Message, user, state: FSMContext):
     if not user.is_staff:

@@ -91,10 +91,17 @@ def products_keyboard(products):
 def confirm_order_keyboard():
     keyboard = [
         [InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="confirm_order")],
+        [InlineKeyboardButton(text="✅ Tasdiqlash", callback_data="confirm_order")],
         [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_order")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+class OrderPaginationStates(StatesGroup):
+    viewing_orders = State()   
+    
+
+class OrderLogin(StatesGroup):
+    waiting_for_password = State()
 
 class DelivererStates(StatesGroup):
     selecting_order = State()
@@ -106,4 +113,6 @@ class DelivererStates(StatesGroup):
     entering_quantity = State()  
     entering_quantity_NO_CLIENT = State()  
     selecting_product_NO_CLIENT = State()  
+    entering_amount_NO_CLIENT = State()  
+    entering_payment_NO_CLIENT = State()  
     kassa = State()  

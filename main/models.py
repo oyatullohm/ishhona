@@ -391,9 +391,9 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=0)
     unit_price = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     
-    def save(self, *args, **kwargs):
-        self.unit_price = self.product.product_price.selling_price
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+        # self.unit_price = self.product.product_price.selling_price
+        # super().save(*args, **kwargs)
 
     
     @property

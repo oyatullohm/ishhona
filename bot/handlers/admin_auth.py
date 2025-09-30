@@ -1,13 +1,11 @@
-from aiogram import Router, F
 from aiogram.types import Message, ReplyKeyboardRemove
-from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from django.conf import settings
+from aiogram.fsm.context import FSMContext
 from main.models import CustomUser,BotSettings
-from bot.keyboards import admin_kb
 from asgiref.sync import sync_to_async
-
+from aiogram.filters import Command
+from bot.keyboards import admin_kb
+from aiogram import Router, F
 router = Router()
 
 class AdminLogin(StatesGroup):

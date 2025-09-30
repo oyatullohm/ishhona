@@ -1,4 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.fsm.state import State, StatesGroup
 
 def main_menu():
     return ReplyKeyboardMarkup(
@@ -12,10 +13,6 @@ def main_menu():
         resize_keyboard=True
     )
 
-
-
-
-from aiogram.fsm.state import State, StatesGroup
 class PaginationStates(StatesGroup):
     viewing_transactions = State()
 

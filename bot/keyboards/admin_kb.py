@@ -319,7 +319,13 @@ class PasswordState(StatesGroup):
 
 class PasswordLoginState(StatesGroup):
     waiting_for_password = State()
-    
+
+
+class TransferMoneyState(StatesGroup):
+    from_kassa = State()
+    to_kassa = State()
+    amount = State()
+
 class ExpenseState(StatesGroup):
     waiting_for_amount = State()
     
