@@ -23,16 +23,19 @@ async def delivery_orders(message: Message, user):  # user parametri
         await message.answer("Hozircha yetkazib berish uchun buyurtma yo'q")
         return
     
-    orders_text = "🚚 Yetkazib berish uchun buyurtmalar:\n\n"
+    # orders_text = "🚚 Yetkazib berish uchun buyurtmalar:\n\n"
     for order in orders:
-        orders_text += f"🆔 {order.id} - {order.client.name}\n"
-        orders_text += f"📞 {order.client.phone_number}\n"
-        orders_text += f"📍 {order.client.address or 'Manzil kiritilmagan'}\n"
+        text = ''
+       
+        text += f"🆔 {order.id} - {order.client.name}\n"
+        text += f"📞 {order.client.phone_number}\n"
+        text += f"🚚 {order.get_status_display()}\n"
+        text +=  f"📍 {order.client.address or 'Manzil kiritilmagan'}\n"
         # orders_text += f"💵 {order.total_amount} {order.currency.code}\n"
-        orders_text += "─" * 20 + "\n"
-    
+        text +=  f"─" * 20 + "\n"
+        await message.answer(text)
     await message.answer(
-        orders_text,
+        '🚚 Yetkazib berish uchun buyurtmalar',
         reply_markup=deliverer_kb.orders_keyboard(orders)
     )
 
