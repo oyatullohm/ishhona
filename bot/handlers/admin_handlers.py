@@ -1483,6 +1483,9 @@ async def not_mixsid(message: Message, user):
 
     if not products:
         await message.answer("📭 Aralashmagan mahsulotlar yo'q")
+        await message.answer(
+        text="Menyu" ,
+        reply_markup=admin_kb.not_mixid())
         return
 
     for i, p in enumerate(products, start=1):
