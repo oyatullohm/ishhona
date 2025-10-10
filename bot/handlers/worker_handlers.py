@@ -116,7 +116,7 @@ async def product_not_mixsid(message:Message, user):
 
 @router.message(F.text == "📦 Ombor Holati")
 async def product_all(message:Message, user):
-    if not user.is_deliverer:
+    if not user.is_worker:
         await message.answer("Sizda worker panelga kirish huquqi yo'q")
         return
     product = await sync_to_async(list)(Product.objects.select_related('product_price').all())

@@ -31,7 +31,7 @@ def  product_menu():
 def  product_():
      return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🏪 Tayor Mahsulot"),KeyboardButton(text="➕ Yangi Tayyor Product Qoshish")],
+            [KeyboardButton(text="🏪 Tayyor Mahsulot"),KeyboardButton(text="➕ Yangi Tayyor Product Qoshish")],
             [ KeyboardButton(text="🏠 Admin Bosh Menyu")],
         ],
         resize_keyboard=True
