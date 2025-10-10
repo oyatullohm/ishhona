@@ -1,4 +1,4 @@
-from main.models import Product, Production, CustomUser, ProductNotMixed , Balans , Cost #g modellaringiz
+from main.models import Product, Production, CustomUser, ProductNotMixed , Balans , Cost, ProductPrice #g modellaringiz
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from asgiref.sync import sync_to_async
@@ -133,9 +133,9 @@ async def start_production(message: Message, user, state: FSMContext):
     if not user.is_worker:
         await message.answer("Sizda worker panelga kirish huquqi yo'q")
         return
-    products = await sync_to_async (list)(Product.objects.all().select_related('product_price'))
+    products = await sync_to_async (list)(ProductPrice.objects.all())
     keyboard = [
-        [InlineKeyboardButton(text=p.product_price.name, callback_data=f"prod:{p.id}")]
+        [InlineKeyboardButton(text=p.name, callback_data=f"prod:{p.id}")]
         for p in products
     ]
     await message.answer("Mahsulotni tanlang:", reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
