@@ -957,7 +957,7 @@ async def add_new_category(message: Message, state: FSMContext, user):
         text="Sizda admin panelga krish hquqi yo'q")
         return
     
-    await message.answer("Yangi kategoriya nomini kiriting:", reply_markup=admin_kb.cancel_menu())
+    await message.answer("Yangi kategoriya nomini kiriting:")
     await state.set_state(AdminStates.waiting_category_name)
 
 @router.message(AdminStates.waiting_category_name)
