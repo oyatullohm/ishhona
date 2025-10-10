@@ -1848,7 +1848,7 @@ async def save_product_price(message: Message, state: FSMContext):
     )
     await state.clear()
 
-@router.message(F.text == "🏪 Tayyor Mahsulot")
+@router.message(F.text == "🏪 Mahsulot")
 async def product_menu(message: Message, user):
     await message.answer(
         text="Tayyor Mahsulotlar Ro'yhati ", 
