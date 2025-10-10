@@ -21,7 +21,7 @@ def  product_menu():
      return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="📦 Aralashmagan Mahsulot"), KeyboardButton(text="🏪 Tayyor Mahsulot")],
-            # [KeyboardButton(text="💸 Mahsulot Narhi"),KeyboardButton(text="🛒 Savdo")],
+            # [KeyboardButton(text="💸 Mahsulot Narhi")],
             [ KeyboardButton(text="🏠 Admin Bosh Menyu")],
 
 
