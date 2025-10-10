@@ -71,7 +71,7 @@ async def set_commands(bot: Bot):
         BotCommand(command="start", description="/start"),
         BotCommand(command="admin", description="/admin"),
         BotCommand(command="worker", description="/worker"),   
-        BotCommand(command="order", description="/"),   
+        BotCommand(command="order", description="/order"),   
         BotCommand(command="drever", description="/drever"),
         BotCommand(command="cancel", description="/cancel"),  ] 
     await bot.set_my_commands(commands)
