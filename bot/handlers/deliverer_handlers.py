@@ -118,7 +118,7 @@ async def order_create(message: Message, user, state: FSMContext):
         await message.answer("❌ Sizda ruxsat yo'q")
         return
     
-    clients = await sync_to_async(list)(Client.objects.all())
+    clients = await sync_to_async(list)(Client.objects.filter(client_type='customer'))
     if not clients:
         await message.answer("❌ Hozircha mijozlar mavjud emas. Avval mijoz qo'shing.")
     else:
