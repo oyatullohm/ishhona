@@ -302,8 +302,12 @@ class ProductPrice(models.Model):
     
     def save(self, *args, **kwargs):
         self.calculate_total_cost()
-        Product.objects.get_or_create(product_price=self)
+        
         super().save(*args, **kwargs)
+        Product.objects.get_or_create(
+            product_price=self,
+            defaults={"quantity": 0}
+        )
 
     def __str__(self):
         return self.name
