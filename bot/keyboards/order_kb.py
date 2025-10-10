@@ -5,7 +5,7 @@ def main_menu():
         keyboard=[
             [KeyboardButton(text="👥 Clientga Savdo"), KeyboardButton(text="💰 Naq Pulga Savdo")],
 
-            [ KeyboardButton(text="📦 Buyurtmalar_"), KeyboardButton(text="📦 Ombor __Holati__")],
+            [ KeyboardButton(text="📦 Buyurtmalar_"), KeyboardButton(text="📦 Ombor__Holati__")],
             [ ]
         ],
         resize_keyboard=True

@@ -6,11 +6,11 @@ from bot.keyboards import order_kb
 from aiogram import Router, F
 router = Router()
         
-@router.message(F.text == "📦 Ombor __Holati__")
+@router.message(F.text == "📦 Ombor__Holati__")
 async def product_all(message:Message, user):
-    if not user:
-        await message.answer("Sizda panelga kirish huquqi yo'q")
-        return
+    # if not user:
+        # await message.answer("Sizda panelga kirish huquqi yo'q")
+        # return
     product = await sync_to_async(list)(Product.objects.select_related('product_price').all())
     for p in product:
         text = (
