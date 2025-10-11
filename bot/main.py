@@ -10,7 +10,7 @@ from aiogram.types import  BotCommand
 # Django ni sozlash
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Admin.settings')
 django.setup()
-from main.models import CustomUser
+from main.models import CustomUser,BotSettings
 
 from bot.keyboards.admin_kb import PasswordLoginState
 # Handlerni import qilish
@@ -47,7 +47,8 @@ async def start_cmd(message: Message, state: FSMContext, user):
 @router.message(PasswordLoginState.waiting_for_password)
 async def check_password(message: Message, state: FSMContext):
     password = message.text.strip()
-    if password == "bot12345":
+    bot_password = await sync_to_async(BotSettings.objects.last)()
+    if password == bot_password.start_password :
         user = await sync_to_async(CustomUser.objects.create)(
             telegram_id=message.from_user.id,
             username=message.from_user.username or f"user_{message.from_user.id}",
