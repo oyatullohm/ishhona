@@ -127,7 +127,7 @@ class KassaTransaction(models.Model):
                 self.client_previous_balance = client_balance.amount
 
                 # 🧮 Balans hisoblash
-                if client_balance.amount > 0:
+                if client_balance.amount < 0:
                     # Mijoz qarzdor
                     if self.transaction_type == "expense":
                         # Pul berilsa → qarz kamayadi
