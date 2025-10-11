@@ -125,13 +125,16 @@ async def process_role_selection(callback: CallbackQuery, state: FSMContext, use
         target_user.is_deliverer = False
         target_user.is_worker = False
         target_user.is_order = False
+        target_user.is_active = False
+        
+        
     
     
     await sync_to_async(target_user.save)()
     
     role_name = {
         'admin': '👑 Admin', 'deliverer': '🚚 Yetkazib beruvchi',
-        'worker': '🔧 Ishchi', 'hechkim': '❌  Barcha hquqlari mahrum '
+        'worker': '🔧 Ishchi', 'Hechkim': '❌  Barcha hquqlari mahrum '
     }[role]
     
     await callback.message.answer(f"✅ {target_user.username} {role_name} bo'ldi")

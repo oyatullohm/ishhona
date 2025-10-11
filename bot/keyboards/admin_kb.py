@@ -84,7 +84,7 @@ def roles_keyboard():
         ],
         [
             InlineKeyboardButton(text="🔧 Ishchi", callback_data="role_worker"),
-            InlineKeyboardButton(text="❌ Hechkim", callback_data="role_delete")
+            InlineKeyboardButton(text="❌ Hechkim", callback_data="role_Hechkim")
         ],
     ])
 
