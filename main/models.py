@@ -127,9 +127,9 @@ class KassaTransaction(models.Model):
                 self.client_previous_balance = client_balance.amount
                 # agar expense bo‘lsa clientga qo‘shiladi, income bo‘lsa clientdan ayiriladi
                 if self.transaction_type == "expense":
-                    self.client_new_balance = client_balance.amount + self.amount
+                    self.client_new_balance = client_balance.amount + abs(self.amount)
                 else:
-                    self.client_new_balance = client_balance.amount - self.amount
+                    self.client_new_balance = client_balance.amount - abs(self.amount)
 
         super().save(*args, **kwargs)
 
