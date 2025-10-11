@@ -9,7 +9,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env.str('SECRET_KEY')
 BOT_TOKEN = env.str('BOT_TOKEN')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -96,8 +96,9 @@ TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 
 USE_TZ = True
-
-STATIC_URL = 'static/'
+STATIC_URL = '/static/' 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 AUTH_USER_MODEL = 'main.CustomUser'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
