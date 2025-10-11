@@ -43,7 +43,7 @@ async def manage_users(message: Message, user):
         return
     
     users = await sync_to_async(list)(
-    CustomUser.objects.all()
+    CustomUser.objects.filter(telegram_id__isnull=False)
 )
     text = "👥 Foydalanuvchilar :\n\n"
     for u in users:
