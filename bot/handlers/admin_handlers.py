@@ -217,7 +217,7 @@ async def show_transactions_page_client_all(message: Message, state: FSMContext)
             f"   📊 Oldingi balans (Kassa): {transaction.previous_balance} {kassa_currency}\n"
             f"   📊 Yangi balans (Kassa): {transaction.new_balance} {kassa_currency}\n"
             f"   📊 Oldingi balans (Client): {client_previous_balance} {client_currency}\n"
-            f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
+            # f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
             f"   📝 Izoh: {description}\n\n"
         )
 
@@ -422,7 +422,7 @@ async def kassaminus(callback: CallbackQuery, state: FSMContext, user):
 
     await state.update_data(kassa_id=kassa_id)
 
-    clients = await sync_to_async(lambda: list(Client.objects.prefetch_related("balances__currency").all()))()
+    clients = await sync_to_async(lambda: list(Client.objects.prefetch_related("balances__currency").filter(client_type='supplier')))()
 
     # klient tanlash menyusi
     buttons = []
@@ -514,12 +514,12 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
         client_balance = await sync_to_async(lambda: client.balances.filter(currency=client_currency).first())()
         client_previous_balance = client_balance.amount if client_balance else Decimal(0)
         # client_new_balance = client_previous_balance + amount
-        if client_balance.amount < 0:
+        # if client_balance.amount < 0:
             # mijoz qarzda, endi to‘lov qilyapti
-            client_new_balance = client_previous_balance + amount
-        else:
-            # mijozning ijobiy balansi bor, to‘lov chiqyapti
-            client_new_balance = client_previous_balance - amount
+        client_new_balance = client_previous_balance + amount
+        # else:
+        #     # mijozning ijobiy balansi bor, to‘lov chiqyapti
+        #     client_new_balance = client_previous_balance - amount
 
         # ✅ Transaction yaratish
         is_convert = kassa.currency != client_currency
@@ -702,14 +702,14 @@ async def process_kassa_plus(message: Message, state: FSMContext, user):
         await sync_to_async(kassa.save)()
 
         # Client balansini kamaytirish
-        if client_balance.amount < 0:
-            # mijoz qarzda, endi to‘lov qilyapti
-            await message.answer('mijoz qarzda 0 dan kichik balansda')
+        # if client_balance.amount < 0:
+        s = client_balance.amount > 0
+        if s:     # mijoz qarzda, endi to‘lov qilyapti
             client_balance.amount += amount
         else:
-            await message.answer('mijoz qarzda dan kichik balansda')
-            # mijozning ijobiy balansi bor, to‘lov chiqyapti
             client_balance.amount -= amount
+        await message.answer(f'{client_balance.amount}mijoz qarzda {s}')
+     
         await sync_to_async(client_balance.save)()
         
         await message.answer(
@@ -1043,7 +1043,7 @@ async def show_transactions_page(message: Message, state: FSMContext):
             f"   📊 Oldingi balans (Kassa): {transaction.previous_balance} {kassa_currency}\n"
             f"   📊 Yangi balans (Kassa): {transaction.new_balance} {kassa_currency}\n"
             f"   📊 Oldingi balans (Client): {client_previous_balance} {client_currency}\n"
-            f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
+            # f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
             f"   📝 Izoh: {description}\n\n"
         )
 
@@ -1153,7 +1153,7 @@ async def show_transactions_page_received(message: Message, state: FSMContext):
             f"   📊 Oldingi balans (Kassa): {transaction.previous_balance} {kassa_currency}\n"
             f"   📊 Yangi balans (Kassa): {transaction.new_balance} {kassa_currency}\n"
             f"   📊 Oldingi balans (Client): {client_previous_balance} {client_currency}\n"
-            f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
+            # f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
             f"   📝 Izoh: {description}\n\n"
         )
 
