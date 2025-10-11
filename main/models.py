@@ -126,12 +126,25 @@ class KassaTransaction(models.Model):
             if client_balance:
                 self.client_previous_balance = client_balance.amount
                 # agar expense bo‘lsa clientga qo‘shiladi, income bo‘lsa clientdan ayiriladi
-                if self.transaction_type == "expense":
-                    self.client_new_balance = client_balance.amount + abs(self.amount)
+                if client_balance.amount < 0:
+                    # 🧮 Agar mijoz qarzdor bo‘lsa (balans < 0)
+                    if self.transaction_type == "expense":
+                        # Pul berilsa → qarz kamayadi
+                        self.client_new_balance = client_balance.amount + self.amount
+                    else:
+                        # Pul olinsa → qarz ortadi
+                        self.client_new_balance = client_balance.amount - self.amount
                 else:
-                    self.client_new_balance = client_balance.amount - abs(self.amount)
+                    # 🧮 Agar balans ijobiy bo‘lsa (pul bizda)
+                    if self.transaction_type == "expense":
+                        # Pul berilsa → balans kamayadi
+                        self.client_new_balance = client_balance.amount - self.amount
+                    else:
+                        # Pul olinsa → balans oshadi
+                        self.client_new_balance = client_balance.amount + self.amount
 
-        super().save(*args, **kwargs)
+
+                        super().save(*args, **kwargs)
 
 # Mijoz modeli
 class Client(models.Model):
