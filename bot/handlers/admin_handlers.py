@@ -472,7 +472,7 @@ async def select_client_kassa(callback: CallbackQuery, state: FSMContext, user):
 
     await callback.message.answer(
         "Yangi miqdorni kiriting:",
-        reply_markup=admin_kb.cancel_menu()
+
     )
     await state.set_state(AdminStates.waiting_kassa_minus)
     await callback.answer()
@@ -630,7 +630,7 @@ async def select_client_kassa_plus(callback: CallbackQuery, state: FSMContext, u
 
     await callback.message.answer(
         "Kassaga qo‘shiladigan miqdorni kiriting:",
-        reply_markup=admin_kb.cancel_menu()
+    
     )
     await state.set_state(AdminStates.waiting_kassa_plus)
     await callback.answer()
