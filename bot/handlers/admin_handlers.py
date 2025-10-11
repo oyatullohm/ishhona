@@ -696,7 +696,12 @@ async def process_kassa_plus(message: Message, state: FSMContext, user):
         await sync_to_async(kassa.save)()
 
         # Client balansini kamaytirish
-        client_balance.amount -= amount
+        if client_balance.amount < 0:
+            # mijoz qarzda, endi to‘lov qilyapti
+            client_balance.amount += amount
+        else:
+            # mijozning ijobiy balansi bor, to‘lov chiqyapti
+            client_balance.amount -= amount
         await sync_to_async(client_balance.save)()
         
         await message.answer(
