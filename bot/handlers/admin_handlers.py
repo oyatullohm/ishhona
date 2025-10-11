@@ -513,7 +513,13 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
         # ✅ Client balansi olish
         client_balance = await sync_to_async(lambda: client.balances.filter(currency=client_currency).first())()
         client_previous_balance = client_balance.amount if client_balance else Decimal(0)
-        client_new_balance = client_previous_balance + amount
+        # client_new_balance = client_previous_balance + amount
+        if client_balance.amount < 0:
+            # mijoz qarzda, endi to‘lov qilyapti
+            client_new_balance = client_previous_balance + amount
+        else:
+            # mijozning ijobiy balansi bor, to‘lov chiqyapti
+            client_new_balance = client_previous_balance - amount
 
         # ✅ Transaction yaratish
         is_convert = kassa.currency != client_currency
