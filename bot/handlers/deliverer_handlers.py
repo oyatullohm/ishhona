@@ -86,8 +86,8 @@ async def confirm_delivery(callback: CallbackQuery, state: FSMContext):
         
         balance = balance[0]
         old_balance = balance.amount
-        balance.amount -= order.total_amount
-        last_balanse = old_balance - order.total_amount
+        balance.amount += order.total_amount
+        last_balanse = old_balance + order.total_amount
     
         await sync_to_async(balance.save)()
     item = await sync_to_async(list) (OrderItem.objects.filter(order=order).select_related('order','product','product__product_price'))

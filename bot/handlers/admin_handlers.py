@@ -217,7 +217,7 @@ async def show_transactions_page_client_all(message: Message, state: FSMContext)
             f"   📊 Oldingi balans (Kassa): {transaction.previous_balance} {kassa_currency}\n"
             f"   📊 Yangi balans (Kassa): {transaction.new_balance} {kassa_currency}\n"
             f"   📊 Oldingi balans (Client): {client_previous_balance} {client_currency}\n"
-            # f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
+            f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
             f"   📝 Izoh: {description}\n\n"
         )
 
@@ -489,7 +489,6 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
         client = await sync_to_async(lambda: Client.objects.get(id=data["client_id"]))()
         cource = await sync_to_async(Cource.objects.last)()
 
-        # Client valyutasini olish
         client_currency = await sync_to_async(lambda: Currency.objects.get(id=data["currency_id"]))()
 
         original_amount = amount
@@ -499,27 +498,27 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
         if kassa.currency != client_currency:
             if kassa.currency.code == "UZS" and client_currency.code == "USD":
                 client_amount = original_amount / cource.cource
-                amount_in_kassa_currency = original_amount  # kassadan chiqadigan UZS
+                amount_in_kassa_currency = original_amount
                 amount = client_amount
-
             elif kassa.currency.code == "USD" and client_currency.code == "UZS":
                 client_amount = original_amount * cource.cource
-                amount_in_kassa_currency = original_amount  # kassadan chiqadigan USD
-                amount = client_amount  # clientga qo‘shiladigan UZS
+                amount_in_kassa_currency = original_amount
+                amount = client_amount
         else:
             amount_in_kassa_currency = original_amount
             amount = original_amount
 
-        # ✅ Client balansi olish
-        client_balance = await sync_to_async(lambda: client.balances.filter(currency=client_currency).first())()
-        client_previous_balance = client_balance.amount if client_balance else Decimal(0)
-        # client_new_balance = client_previous_balance + amount
-        # if client_balance.amount < 0:
-            # mijoz qarzda, endi to‘lov qilyapti
+        # ✅ ClientBalance ni olish yoki yaratish
+        client_balance, created = await sync_to_async(lambda: ClientBalance.objects.get_or_create(
+            client=client,
+            currency=client_currency,
+            defaults={'amount': Decimal(0)}
+        ))()
+
+        client_previous_balance = client_balance.amount
+        
+        # 🔧 ASOSIY MANTIQ: Siz clientga pul berayotganda → client balansi OSHADI
         client_new_balance = client_previous_balance + amount
-        # else:
-        #     # mijozning ijobiy balansi bor, to‘lov chiqyapti
-        #     client_new_balance = client_previous_balance - amount
 
         # ✅ Transaction yaratish
         is_convert = kassa.currency != client_currency
@@ -527,8 +526,8 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
             kassa=kassa,
             transaction_type="expense",
             related_client=client,
-            amount=amount,  # client valyutasi bo‘yicha
-            amount_in_kassa_currency=amount_in_kassa_currency,  # kassadan chiqadigan valyuta
+            amount=amount,
+            amount_in_kassa_currency=amount_in_kassa_currency,
             currency=client_currency,
             cource=cource,
             is_convert=is_convert,
@@ -539,19 +538,28 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
             client_new_balance=client_new_balance,
         )
 
-        # ✅ Kassa balansini yangilash
+        # ✅ Balanslarni yangilash
         kassa.balance = transaction.new_balance
         await sync_to_async(kassa.save)()
 
-        # ✅ Client balansini yangilash
-        if client_balance:
-            client_balance.amount = client_new_balance
-            await sync_to_async(client_balance.save)()
+        client_balance.amount = client_new_balance
+        await sync_to_async(client_balance.save)()
+
+        # 🔧 BALANS HOLATINI TUSHUNTIRISH
+        # if client_new_balance  0:
+        #     balance_status = f"💰 {client.name} sizdan qarzda: +{client_new_balance} {client_currency.code}"
+        if client_new_balance < 0:
+            balance_status = f"💳 Siz {client.name} ga qarzdorsiz: {client_new_balance} {client_currency.code}"
         else:
-            await sync_to_async(client.balances.create)(
-                currency=client_currency,
-                amount=amount
-            )
+            balance_status = f"✅ Hisob-kitob teng (0)"
+
+        await message.answer(
+            f"✅ Pul muvaffaqiyatli berildi!\n"
+            f"📦 Berildi: {original_amount} {kassa.currency.code}\n"
+            f"👤 Client hisobiga: {amount:.2f} {client_currency.code}\n"
+            f"{balance_status}"
+        )
+
 
         await message.answer(
             text=f"✅ {client.name} ga {amount} {client_currency.code} berildi.\n"
@@ -659,69 +667,79 @@ async def process_kassa_plus(message: Message, state: FSMContext, user):
         original_amount = amount
         amount_in_kassa_currency = amount
 
-        # Konvertatsiya (agar valyutalar turlicha bo‘lsa)
+        # Konvertatsiya (agar valyutalar turlicha bo'lsa)
         if kassa.currency != client_currency:
             if kassa.currency.code == "UZS" and client_currency.code == "USD":
                 # Client USD beradi, kassaga UZS tushadi
                 client_amount = original_amount
-                amount_in_kassa_currency = original_amount * cource.cource  # UZS qo‘shiladi
+                amount_in_kassa_currency = original_amount * cource.cource  # UZS qo'shiladi
                 amount = client_amount
             elif kassa.currency.code == "USD" and client_currency.code == "UZS":
                 # Client UZS beradi, kassaga USD tushadi
                 client_amount = original_amount
-                amount_in_kassa_currency = original_amount / cource.cource  # USD qo‘shiladi
+                amount_in_kassa_currency = original_amount / cource.cource  # USD qo'shiladi
                 amount = client_amount
         else:
             amount_in_kassa_currency = original_amount
             amount = original_amount
 
-        # Client balansini tekshirish
-        client_balance = await sync_to_async(lambda: client.balances.filter(currency=client_currency).first())()
-        # if not client_balance or client_balance.amount < amount:
-        #     await message.answer(f"❌ {client.name} balansida yetarli mablag‘ mavjud emas!")
-        #     return
+        # ✅ ClientBalance ni olish yoki yaratish
+        client_balance, created = await sync_to_async(lambda: ClientBalance.objects.get_or_create(
+            client=client,
+            currency=client_currency,
+            defaults={'amount': Decimal(0)}
+        ))()
 
-        # Transaction yaratish (income)
+        client_previous_balance = client_balance.amount
+        
+        # 🔧 ASOSIY TO'G'RILASH: Clientdan pul olayotganda → client balansi KAMAYADI
+        client_new_balance = client_previous_balance - amount
+
+        # ✅ Transaction yaratish (income)
         is_convert = kassa.currency != client_currency
         transaction = await sync_to_async(KassaTransaction.objects.create)(
             kassa=kassa,
             transaction_type="income",
             amount=amount,  # client valyutasi
-            related_client = client,
+            related_client=client,
             amount_in_kassa_currency=amount_in_kassa_currency,  # kassaga tushadigan valyuta
             currency=client_currency,
             is_convert=is_convert,
             cource=cource,
             description=f"{client.name} dan pul olindi",
             previous_balance=kassa.balance,
-            new_balance=kassa.balance + amount_in_kassa_currency
+            new_balance=kassa.balance + amount_in_kassa_currency,
+            client_previous_balance=client_previous_balance,
+            client_new_balance=client_new_balance  # ✅ Yangi qator
         )
 
-        # Kassani yangilash
+        # ✅ Kassani yangilash
         kassa.balance = transaction.new_balance
         await sync_to_async(kassa.save)()
 
-        # Client balansini kamaytirish
-        # if client_balance.amount < 0:
-        s = client_balance.amount > 0
-        if s:     # mijoz qarzda, endi to‘lov qilyapti
-            client_balance.amount += amount
-        else:
-            client_balance.amount -= amount
-        await message.answer(f'{client_balance.amount}mijoz qarzda {s}')
-     
+        # ✅ Client balansini yangilash
+        client_balance.amount = client_new_balance
         await sync_to_async(client_balance.save)()
-        
+
+        # 🔧 BALANS HOLATINI TUSHUNTIRISH
+        if client_new_balance > 0:
+            balance_status = f"💰 {client.name} sizdan qarzda: +{client_new_balance} {client_currency.code}"
+        elif client_new_balance < 0:
+            balance_status = f"💳 Siz {client.name} ga qarzdorsiz: {client_new_balance} {client_currency.code}"
+        else:
+            balance_status = f"✅ Hisob-kitob teng (0)"
+
         await message.answer(
-            text=f"✅ {client.name} dan {amount} {client_currency.code} olindi.\n"
-                f"Kassaga qo‘shildi: {amount_in_kassa_currency} {kassa.currency.code}\n"
-                f"Kassa yangi balansi: {kassa.balance} {kassa.currency.code}"
+            f"✅ {client.name} dan pul olindi!\n"
+            f"📦 Olingan: {original_amount} {client_currency.code}\n"
+            f"💰 Kassaga qo'shildi: {amount_in_kassa_currency:.2f} {kassa.currency.code}\n"
+            f"🏦 Kassa yangi balansi: {kassa.balance:.2f} {kassa.currency.code}\n"
+            f"{balance_status}"
         )
         await state.clear()
         
     except Exception as e:
         await message.answer(f"❌ Xatolik yuz berdi: {str(e)}")
-
 # # === CLIENT BOSHQARISH ===pu
 @router.message(F.text == "🤝 Mijozlar")
 async def manage_clients(message: Message, user):
@@ -1043,7 +1061,7 @@ async def show_transactions_page(message: Message, state: FSMContext):
             f"   📊 Oldingi balans (Kassa): {transaction.previous_balance} {kassa_currency}\n"
             f"   📊 Yangi balans (Kassa): {transaction.new_balance} {kassa_currency}\n"
             f"   📊 Oldingi balans (Client): {client_previous_balance} {client_currency}\n"
-            # f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
+            f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
             f"   📝 Izoh: {description}\n\n"
         )
 
@@ -1153,7 +1171,7 @@ async def show_transactions_page_received(message: Message, state: FSMContext):
             f"   📊 Oldingi balans (Kassa): {transaction.previous_balance} {kassa_currency}\n"
             f"   📊 Yangi balans (Kassa): {transaction.new_balance} {kassa_currency}\n"
             f"   📊 Oldingi balans (Client): {client_previous_balance} {client_currency}\n"
-            # f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
+            f"   📊 Yangi balans (client): {client_new_balance} {client_currency}\n"
             f"   📝 Izoh: {description}\n\n"
         )
 

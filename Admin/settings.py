@@ -8,8 +8,8 @@ environ.Env.read_env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env.str('SECRET_KEY')
 BOT_TOKEN = env.str('BOT_TOKEN')
-
-DEBUG = False
+from .set_database import *
+DEBUG = D
 
 ALLOWED_HOSTS = ['*']
 
@@ -61,7 +61,7 @@ WSGI_APPLICATION = 'Admin.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-from .set_database import *
+
 
 DATABASES = LOCAL_DATABASE
 
