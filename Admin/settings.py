@@ -61,13 +61,10 @@ WSGI_APPLICATION = 'Admin.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+from .set_database import *
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+DATABASES = LOCAL_DATABASE
+
 
 
 # Password validation

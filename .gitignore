@@ -9,7 +9,7 @@ migrations/
 env/
 .env/
 venv/
-
+set_database.py
 *.log
 *.pot
 *.pyc
