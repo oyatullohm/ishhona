@@ -244,9 +244,11 @@ class Income(models.Model):
                 # if self.cource and str(self.cource).isdigit():
                 #     balance.amount += self.total_sum * float(self.cource)
                 # else:
-                
-                balance.amount += self.total_sum
-
+                if balance.amount > 0:
+                    balance.amount += self.total_sum
+                else:
+                    balance.amount -= self.total_sum
+            
                 balance.save()
 
         super().save(*args, **kwargs)
