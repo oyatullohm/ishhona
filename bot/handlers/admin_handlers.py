@@ -536,6 +536,7 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
             new_balance=kassa.balance - amount_in_kassa_currency,
             client_previous_balance=client_previous_balance,
             client_new_balance=client_new_balance,
+            
         )
 
         # ✅ Balanslarni yangilash
