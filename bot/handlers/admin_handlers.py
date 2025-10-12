@@ -518,7 +518,7 @@ async def process_kassa_amount(message: Message, state: FSMContext, user):
         client_previous_balance = client_balance.amount
         
         # 🔧 ASOSIY MANTIQ: Siz clientga pul berayotganda → client balansi OSHADI
-        client_new_balance = client_previous_balance + amount
+        client_new_balance = client_previous_balance - amount
 
         # ✅ Transaction yaratish
         is_convert = kassa.currency != client_currency
