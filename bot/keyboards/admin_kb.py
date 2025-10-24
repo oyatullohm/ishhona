@@ -368,7 +368,6 @@ class IncomeState(StatesGroup):
     price = State()
     client= State()
     payment_type = State()
-    payment_type_ = State()
     cash = State()
 
 class WorkerMoneyState(StatesGroup):
