@@ -1577,6 +1577,7 @@ async def set_new_quantity(message: Message, state: FSMContext):
     await state.clear()
 
 # 🔹 Kirim boshlash
+# 🔹 Kirim boshlash
 @router.message(F.text == "➕ Aralashmagan Mahsulot kirim Qilish")
 async def choose_product(message: Message, state: FSMContext):
     products = await sync_to_async(list)(
@@ -1611,25 +1612,40 @@ async def get_product(message: Message, state: FSMContext):
     except ProductNotMixed.DoesNotExist:
         await message.answer("❌ Bunday mahsulot topilmadi, qaytadan tanlang")
         return
-    
-    # supplierlarni chiqaramiz
-    clients = await sync_to_async(list)(Client.objects.filter(client_type='supplier'))
-    if not clients:
-        await message.answer("❌ Supplier clientlar mavjud emas")
-        return
 
     await state.update_data(product_id=product.id)
-    await message.answer(f"✅ {product.name} tanlandi.\n\n👤 Endi client tanlang:")
+    await message.answer(
+        f"✅ {product.name} tanlandi.\n\n💵 To‘lov turini tanlang:",
+        reply_markup=payment_type_keyboard()
+    )
+    await state.set_state(IncomeState.payment_type)
 
-    for i, c in enumerate(clients, start=1):
-        text = (
-            f"🔹 <b>{i}-client</b>\n"
-            f"🆔 ID: {c.id}\n"
-            f"👤 Nomi: {c.name}\n"
-        )
-        await message.answer(text, reply_markup=client_keyboard(c.id))
+# 🔹 To‘lov turi tanlash (Naq yoki Supplier)
+@router.callback_query(F.data.startswith("payment_type"))
+async def get_payment_type(callback: CallbackQuery, state: FSMContext):
+    payment_type = callback.data.split(":")[1]
+    await state.update_data(payment_type=payment_type)
 
-    await state.set_state(IncomeState.client)
+    if payment_type == "naq":
+        kassalar = await sync_to_async(list)(Kassa.objects.all())
+        if not kassalar:
+            await callback.message.answer("❌ Hech qanday kassa mavjud emas")
+            return
+
+        await callback.message.answer("🏦 Qaysi kassadan pul to‘lanadi?", reply_markup=cash_keyboard(kassalar))
+        await state.set_state(IncomeState.cash)
+
+    elif payment_type == "supplier":
+        clients = await sync_to_async(list)(Client.objects.filter(client_type='supplier'))
+        if not clients:
+            await callback.message.answer("❌ Supplier clientlar mavjud emas")
+            return
+
+        await callback.message.answer("👤 Supplier tanlang:")
+        for i, c in enumerate(clients, start=1):
+            text = f"🔹 <b>{i}-client</b>\n🆔 ID: {c.id}\n👤 Nomi: {c.name}\n"
+            await callback.message.answer(text, reply_markup=client_keyboard(c.id))
+        await state.set_state(IncomeState.client)
 
 
 # 🔹 Client tanlash
@@ -1643,6 +1659,15 @@ async def choose_client(callback: CallbackQuery, state: FSMContext):
     await state.set_state(IncomeState.quantity)
 
 
+# 🔹 Kassa tanlash (Naq uchun)
+@router.callback_query(F.data.startswith("choose_cash"))
+async def choose_cash(callback: CallbackQuery, state: FSMContext):
+    cash_id = int(callback.data.split(":")[1])
+    kassa = await sync_to_async(Kassa.objects.get)(id=cash_id)
+    await state.update_data(cash_id=kassa.id)
+    await callback.message.answer(f"✅ {kassa.name} kassasi tanlandi.\nEndi miqdorini kiriting:")
+    await state.set_state(IncomeState.quantity)
+
 
 # 🔹 Miqdor kiritish
 @router.message(IncomeState.quantity)
@@ -1652,13 +1677,13 @@ async def get_quantity(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("❌ Miqdorni faqat raqamda kiriting!")
         return
-    
+
     await state.update_data(quantity=quantity)
     await message.answer("💰 Endi narxini kiriting:")
     await state.set_state(IncomeState.price)
 
 
-# 🔹 Narx kiritish va saqlash
+# 🔹 Narx kiritish va yakuniy saqlash
 @router.message(IncomeState.price)
 async def save_income(message: Message, state: FSMContext, user: CustomUser):
     try:
@@ -1669,9 +1694,13 @@ async def save_income(message: Message, state: FSMContext, user: CustomUser):
 
     data = await state.get_data()
     product = await sync_to_async(ProductNotMixed.objects.get)(id=data["product_id"])
-    client = await sync_to_async(Client.objects.get)(id=data["client_id"])
+    payment_type = data.get("payment_type")
     currency_id = product.currency_id
     currency = await sync_to_async(Currency.objects.get)(id=currency_id)
+
+    client = None
+    if payment_type == "supplier":
+        client = await sync_to_async(Client.objects.get)(id=data["client_id"])
 
     income = await sync_to_async(Income.objects.create)(
         component=product,
@@ -1679,21 +1708,32 @@ async def save_income(message: Message, state: FSMContext, user: CustomUser):
         price=Decimal(price),
         currency_id=currency_id,
         user=user,
-        client=client
+        client=client,
     )
-    product.price =Decimal(price)
+
+    # 🔹 Product narxini yangilaymiz
+    product.price = Decimal(price)
     await sync_to_async(product.save)()
+
+    # 🔹 Agar naq bo‘lsa, kassadan pulni ayiramiz
+    if payment_type == "naq":
+        kassa = await sync_to_async(Kassa.objects.get)(id=data["cash_id"])
+        minus_summ = Decimal(price) * Decimal(data["quantity"])
+        kassa.balance -= minus_summ
+        await sync_to_async(kassa.save)()
+        await message.answer(f"🏦 {kassa.name} kassasidan {minus_summ} so‘m ayirildi 💸")
+
     await message.answer(
         f"✅ Income qo‘shildi!\n\n"
         f"📦 Mahsulot: {product.name}\n"
         f"🔢 Miqdor: {income.quantity} {product.get_unit_display()}\n"
         f"💰 Narx: {income.price} {currency}\n"
         f"📊 Jami: {income.total_sum} {currency}\n"
-        f"👤 Client: {client}\n"
-        f"💵 Kurs: {income.cource}\n"
+        f"👤 Client: {client if client else 'Naq (kassa orqali)'}\n"
         f"🏦 Kim kiritdi: {income.user}"
     )
     await state.clear()
+
 
 @router.message(F.text == "📥 Aralashmagan Mahsulot Tarihi")
 async def money_received(message: Message, user, state: FSMContext):

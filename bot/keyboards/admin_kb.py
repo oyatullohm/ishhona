@@ -88,6 +88,25 @@ def roles_keyboard():
         ],
     ])
 
+# To‘lov turini tanlash (Naq yoki Supplier)
+
+def payment_type_keyboard():
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="💵 Naq", callback_data="payment_type:naq"),
+            InlineKeyboardButton(text="🏢 Supplier", callback_data="payment_type:supplier"),
+        ]
+    ])
+    return keyboard
+# Kassa tanlash uchun
+def cash_keyboard(kassalar):
+    markup = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=f"{k.name} ({k.balance} so‘m)", callback_data=f"choose_cash:{k.id}")]
+        for k in kassalar
+    ])
+    return markup
+
+
 def kassa_management_menu():
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -348,6 +367,8 @@ class IncomeState(StatesGroup):
     quantity = State()
     price = State()
     client= State()
+    payment_type = State()
+    cash = State()
 
 class WorkerMoneyState(StatesGroup):
     worker_id = State()
