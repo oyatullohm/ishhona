@@ -19,4 +19,4 @@ __pycache__/
 db.sqlite3
 db.sqlite3-journal
 venv/
-media/
+media/google-chrome-stable_current_amd64.deb
