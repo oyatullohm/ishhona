@@ -1939,7 +1939,7 @@ async def product_menu(message: Message, user):
             f"💰 Sotilish narxi: {p.product_price.selling_price:,} so‘m\n"
             f"👷 Ishlab chiqarish xarajati (ish haqi): {p.product_price.salary:,} so‘m\n"
             f"💵 Dollardagi narh: {p.product_price.total_cost_usd:,} $\n"
-            f"💵 Sof foyda: {p.product_price.benefit} $\n"
+            f"💵 Sof foyda: {p.product_price.benefit} so'm\n"
             f"🇺🇿 So‘mdagi narh: {p.product_price.total_cost_uzs:,} so‘m\n\n"
             f"📊 Miqdor: {p.quantity}\n"
             f"🧾 Jami summa: {p.total_cost:,} so‘m\n"
