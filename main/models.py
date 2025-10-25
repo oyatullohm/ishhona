@@ -342,8 +342,8 @@ class Production(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True )
     date = models.DateField(auto_now_add=True)
     
-    def __str__(self):
-        return f"{self.product.product_price.name} - {self.quantity} dona"
+    # def __str__(self):
+    #     return f"{self.product.product_price.name} - {self.quantity} dona"
 
     
     def save(self, *args, **kwargs):
