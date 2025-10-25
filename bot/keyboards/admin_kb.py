@@ -50,6 +50,12 @@ def product_price_inline_buttons(product_id):
                 text="👷 Ish haqi (xarajat)ni o‘zgartirish",
                 callback_data=f"edit_salary:{product_id}"
             )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Sof foydani o‘zgartirish",
+                callback_data=f"edit_foyda:{product_id}"
+            )
         ]
     ])
     return keyboard
@@ -380,6 +386,7 @@ class ProductPriceState(StatesGroup):
     done = State()
     selling_price = State()
     salary = State()
+    Foyda = State()
 
 class OrderPaginationStates(StatesGroup):
     viewing_orders = State()    

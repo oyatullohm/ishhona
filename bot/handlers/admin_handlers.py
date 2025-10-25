@@ -1939,6 +1939,7 @@ async def product_menu(message: Message, user):
             f"💰 Sotilish narxi: {p.product_price.selling_price:,} so‘m\n"
             f"👷 Ishlab chiqarish xarajati (ish haqi): {p.product_price.salary:,} so‘m\n"
             f"💵 Dollardagi narh: {p.product_price.total_cost_usd:,} $\n"
+            f"💵 Sof foyda: {p.product_price.benefit} $\n"
             f"🇺🇿 So‘mdagi narh: {p.product_price.total_cost_uzs:,} so‘m\n\n"
             f"📊 Miqdor: {p.quantity}\n"
             f"🧾 Jami summa: {p.total_cost:,} so‘m\n"
@@ -1977,6 +1978,7 @@ async def product_selling_price(message: Message, state: FSMContext):
         f"💰 Sotilish narxi: {int(p.selling_price):,} so‘m\n"
         f"👷 Ishlab chiqarish xarajati (ish haqi): {int(p.salary):,} so‘m\n"
         f"💵 Dollardagi narh: {p.total_cost_usd:,.2f} $\n"
+        f"💵 Sof foyda: {p.benefit} so‘m\n"
         f"🇺🇿 So‘mdagi narh: {p.total_cost_uzs:,.2f} so‘m\n"
     )
 
@@ -1985,7 +1987,45 @@ async def product_selling_price(message: Message, state: FSMContext):
         reply_markup=product_price_inline_buttons(p.id) 
     )
     
-        
+
+@router.callback_query(F.data.startswith("edit_foyda"))
+async def edit_foyda_(callback: CallbackQuery, state: FSMContext):
+    product_id = int(callback.data.split(":")[1])
+    await state.update_data(product=product_id)
+    await callback.message.delete()  # eski xabarni o‘chiramiz
+    await callback.message.answer("✅ Product tanlandi.\n\n💰 Endi Sof foydani kiriting:")
+    await state.set_state(ProductPriceState.Foyda)
+
+
+# 📌 Sotilish narxi kiritish
+@router.message(ProductPriceState.Foyda)
+async def product_foyda(message: Message, state: FSMContext):
+    data = await state.get_data()
+    try:
+        benefit = Decimal(message.text)
+    except ValueError:
+        await message.answer("❌ Foydani faqat raqamda kiriting!")
+        return
+
+    p = await sync_to_async(ProductPrice.objects.get)(id=data['product'])
+    p.benefit = benefit
+    await sync_to_async(p.save)()
+
+    # Chiroyli chiqarish
+    text = (
+        f"📦 Mahsulot: {p.name}\n\n"
+        f"🆔 ID: {p.id}\n"
+        f"💰 Sotilish narxi: {int(p.selling_price):,} so‘m\n"
+        f"👷 Ishlab chiqarish xarajati (ish haqi): {int(p.salary):,} so‘m\n"
+        f"💵 Dollardagi narh: {p.total_cost_usd:,.2f} $\n"
+        f"💵 Sof foyda: {p.benefit} so‘m\n"
+        f"🇺🇿 So‘mdagi narh: {p.total_cost_uzs:,.2f} so‘m\n"
+    )
+
+    await message.answer(
+        text,
+        reply_markup=product_price_inline_buttons(p.id) 
+    )     
 
 @router.callback_query(F.data.startswith("edit_salary"))
 async def edit_salary_(callback: CallbackQuery, state: FSMContext):
@@ -2017,6 +2057,7 @@ async def product_salary(message: Message, state: FSMContext):
         f"💰 Sotilish narxi: {int(p.selling_price):,} so‘m\n"
         f"👷 Ishlab chiqarish xarajati (ish haqi): {int(p.salary):,} so‘m\n"
         f"💵 Dollardagi narh: {p.total_cost_usd:,.2f} $\n"
+        f"💵 Sof foyda: {p.benefit} so‘m\n"
         f"🇺🇿 So‘mdagi narh: {p.total_cost_uzs:,.2f} so‘m\n"
     )
 
