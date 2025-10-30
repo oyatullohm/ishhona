@@ -20,6 +20,15 @@ def button_valyuta():
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
+def price_choice_keyboard():
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🧾 Standart narx", callback_data="price_standard"),],
+            [InlineKeyboardButton(text="✍️ Qo‘lda kiritish", callback_data="price_custom"),
+        ]
+    ])
+    return keyboard
+
 def product_selection_keyboard(products):
     keyboard = []
     row = []
@@ -116,3 +125,5 @@ class DelivererStates(StatesGroup):
     entering_amount_NO_CLIENT = State()  
     entering_payment_NO_CLIENT = State()  
     kassa = State()  
+    choosing_price_type = State()
+    entering_price = State()

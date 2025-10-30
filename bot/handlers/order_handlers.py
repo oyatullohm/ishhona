@@ -155,32 +155,21 @@ async def select_client(callback: CallbackQuery, state: FSMContext):
         f"✅ Mijoz tanlandi:\n"
         f"👤 {client.name}\n"
         f"📞 {client.phone_number}\n"
-        f"📍 {client.address or 'Manzil kiritilmagan'}\n\n"
-        f"📝 Valyutani tanlang:",
-        reply_markup=order_kb.button_valyuta()
+        f"📍 {client.address or 'Manzil kiritilmagan'}"
     )
 
-
-    await state.set_state(order_kb.DelivererStates.selecting_order)
-    await callback.answer()
-
-# 📝 Savdo ta'rifini kiritish
-@router.callback_query(F.data.in_(["UZS", "USD"]), order_kb.DelivererStates.selecting_order)
-async def enter_order_details(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    client = await sync_to_async(Client.objects.get)(id=data['client_id'])
-    currency_code = callback.data
+    # Standart valyuta (masalan, UZS)
+    currency = await sync_to_async(Currency.objects.get)(code='UZS')
     user = await sync_to_async(CustomUser.objects.get)(telegram_id=callback.from_user.id)
-    currency = await sync_to_async(Currency.objects.get)(code=currency_code)
+
     order = Order(
         client=client,
         total_amount=0,
-        status='pending',            
-        base_currency= currency,
-        user = user
+        status='pending',
+        base_currency=currency,
+        user=user
     )
     await sync_to_async(order.save)()
-    
     await state.update_data(order_id=order.id)
 
     products = await sync_to_async(list)(Product.objects.select_related('product_price').all())
@@ -189,20 +178,21 @@ async def enter_order_details(callback: CallbackQuery, state: FSMContext):
         f"Endi mahsulot tanlang:",
         reply_markup=order_kb.product_selection_keyboard(products)
     )
-    await state.set_state(order_kb.DelivererStates.selecting_product)
 
+    await state.set_state(order_kb.DelivererStates.selecting_product)
+    await callback.answer()
 
 # 📦 Mahsulot tanlash
 @router.callback_query(F.data.startswith("select_pproduct_"), order_kb.DelivererStates.selecting_product)
 async def select_product(callback: CallbackQuery, state: FSMContext):
     product_id = int(callback.data.split("_")[2])
-    
     await state.update_data(product_id=product_id)
 
     product = await sync_to_async(Product.objects.select_related('product_price').get)(id=product_id)
+    
     await callback.message.answer(
         f"📦 Mahsulot tanlandi: {product.product_price.name}\n"
-        f"💵 Narxi: {product.product_price.selling_price} so'm\n\n"
+        f"💵 Standart narx: {product.product_price.selling_price} so'm\n\n"
         f"❓ Nechta olasiz?"
     )
     await state.set_state(order_kb.DelivererStates.entering_quantity)
@@ -217,20 +207,60 @@ async def enter_quantity(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("❌ Faqat son kiriting.")
         return
-    
+    from bot.keyboards.order_kb import price_choice_keyboard
+    await state.update_data(quantity=quantity)
+    await message.answer(
+        "💰 Narxni tanlang:",
+        reply_markup=price_choice_keyboard()
+    )
+    await state.set_state(order_kb.DelivererStates.choosing_price_type)
+
+
+# 💵 Narx turi tanlash (standart yoki qo‘lda)
+@router.callback_query(order_kb.DelivererStates.choosing_price_type)
+async def choose_price_type(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    order = await sync_to_async(Order.objects.get)(id=data['order_id'])
     product = await sync_to_async(Product.objects.select_related('product_price').get)(id=data['product_id'])
 
-    order_item = OrderItem(order=order, product=product, quantity=quantity,unit_price=product.product_price.selling_price)
-    await sync_to_async(order_item.save)()
+    if callback.data == "price_standard":
+        unit_price = product.product_price.selling_price
+        quantity = data['quantity']
+        order = await sync_to_async(Order.objects.get)(id=data['order_id'])
+        order_item = OrderItem(order=order, product=product, quantity=quantity, unit_price=unit_price)
+        await sync_to_async(order_item.save)()
+        await callback.message.answer(
+            f"✅ Qo‘shildi: {product.product_price.name} x {quantity} = {order_item.total_price} so‘m\n\n"
+            f"Yana mahsulot tanlang yoki ✅ Yakunlash tugmasini bosing.",
+            reply_markup=order_kb.product_selection_keyboard(await sync_to_async(list)(Product.objects.select_related('product_price').all()))
+        )
+        await state.set_state(order_kb.DelivererStates.selecting_product)
+    elif callback.data == "price_custom":
+        await callback.message.answer("✏️ Iltimos, narxni kiriting:")
+        await state.set_state(order_kb.DelivererStates.entering_price)
 
-    await message.answer(
-        f"✅ Qo‘shildi: {product.product_price.name} x {quantity} = {order_item.total_price} so‘m\n\n"
-        f"Yana mahsulot tanlang yoki ✅ Yakunlash tugmasini bosing.",
-        reply_markup=order_kb.product_selection_keyboard(await sync_to_async(list)(Product.objects.select_related('product_price').all()))
-    )
-    await state.set_state(order_kb.DelivererStates.selecting_product)
+    await callback.answer()
+
+
+# 💵 Qo‘lda narx kiritish
+@router.message(order_kb.DelivererStates.entering_price)
+async def enter_price(message: Message, state: FSMContext):
+    try:
+        unit_price = int(message.text)
+        data = await state.get_data()
+        product = await sync_to_async(Product.objects.select_related('product_price').get)(id=data['product_id'])
+        quantity = data['quantity']
+        order = await sync_to_async(Order.objects.get)(id=data['order_id'])
+        order_item = OrderItem(order=order, product=product, quantity=quantity, unit_price=unit_price)
+        await sync_to_async(order_item.save)()
+        await message.answer(
+            f"✅ Qo‘shildi: {product.product_price.name} x {quantity} = {order_item.total_price} so‘m\n\n"
+            f"Yana mahsulot tanlang yoki ✅ Yakunlash tugmasini bosing.",
+            reply_markup=order_kb.product_selection_keyboard(await sync_to_async(list)(Product.objects.select_related('product_price').all()))
+        )
+        await state.set_state(order_kb.DelivererStates.selecting_product)
+    except ValueError:
+        await message.answer("❌ Faqat son kiriting.")
+        return
 
 
 # ✅ Yakunlash

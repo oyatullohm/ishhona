@@ -21,7 +21,6 @@ def client_selection_keyboard(clients):
         ])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-
 def product_selection_keyboard(products):
     keyboard = []
     row = []
@@ -46,7 +45,6 @@ def button_valyuta():
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-
 def orders_keyboard(orders):
     keyboard = []
     for order in orders:
@@ -59,7 +57,43 @@ def orders_keyboard(orders):
         
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+def order_item_edit_keyboard(id):
+    keyboard = [
+        [
+            InlineKeyboardButton(text="O'zgartirish", callback_data=f"_item_edit_{id}"),
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+def order_item_action_keyboard(id):
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Narh" ,callback_data=f"d_item_edit_price_{id}"),
+        ],
+        [
+            InlineKeyboardButton(text="Miqdor", callback_data=f"d_item_edit_quantity_{id}"),
+        
+        ],
+        [
+            InlineKeyboardButton(text="Mahsulot", callback_data=f"d_item_product__{id}"),
+        ],
+        [
+            InlineKeyboardButton(text="O'chirish", callback_data=f"d_item_delete__{id}"),
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def order_edit(items):
+    keyboard = []
+    
+    keyboard.append([
+        InlineKeyboardButton(
+            text=f"🟩 Buyurtma #{items.id} ni Tahrirlash",
+            callback_data=f"deliver_item_edit_{items.id}"
+        )
+    ])
+        
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 def confirm_delivery_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -76,4 +110,10 @@ class DelivererStates(StatesGroup):
     selecting_client = State()      # mijoz tanlash
     selecting_order = State()       # savdo ta'rifi kiritish
     selecting_product = State()     # mahsulot tanlash
+    selecting_product_edit = State()     # mahsulot tanlash
     entering_quantity = State()  
+    choosing_price_type = State()
+    entering_price = State()
+    entering_price_edit = State()
+    editing_order_item = State()
+    entering_quantity_edit = State()
