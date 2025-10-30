@@ -5,6 +5,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.dispatch import receiver
 from django.db import models
 from datetime import date
+
 class Benefit(models.Model):
     percentage = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     date = models.DateField(default=date.today)
@@ -71,9 +72,8 @@ class CustomUser(AbstractUser):
         verbose_name_plural = "Foydalanichilar"
     def __str__(self):
         return f"{self.username}"
+
 # Kassa modeli
-
-
 class Balans(models.Model):
     balans = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     user = models.OneToOneField(CustomUser, on_delete=models.SET_NULL, null=True, blank=True )
@@ -223,7 +223,6 @@ class Cost(models.Model):
             self.kassa.balance -= self.amount
             self.kassa.save()
         super().save(*args, **kwargs)
-
 
 # Mahsulot aralashmagan 
 class ProductNotMixed(models.Model):
@@ -414,8 +413,7 @@ class Production(models.Model):
     class Meta:
         verbose_name = "Mahsulot Ishlab chiqarish"
         verbose_name_plural = "Mahsulotlar Ishlab chiqarish"
-    
-    
+
 # Buyurtma modeli
 class Order(models.Model):
     ORDER_STATUS = (
@@ -443,9 +441,7 @@ class Order(models.Model):
     class Meta:
         verbose_name = "Buyurtma"
         verbose_name_plural = "Buyurtmalar"
-    
-    
-    
+ 
 # Buyurtma elementlari
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True , related_name='items')
@@ -461,7 +457,6 @@ class OrderItem(models.Model):
         verbose_name = "Buyurtma elementi"
         verbose_name_plural = "Buyurtma elementlari"
     def save(self, *args, **kwargs):
-        from datetime import date
         today =  date.today()
         first_day_of_month = today.replace(day=1)
         benefit, created = Benefit.objects.get_or_create(date=first_day_of_month)
@@ -469,6 +464,7 @@ class OrderItem(models.Model):
         benefit.percentage += Decimal(self.quantity) * benefit_value
         benefit.save()
         super().save(*args, **kwargs)
+
 
 class Transfer(models.Model):
     from_kassa = models.ForeignKey(Kassa, on_delete=models.SET_NULL, null=True, blank=True , related_name='transfers_out')

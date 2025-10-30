@@ -12,7 +12,7 @@ def admin_main_menu():
             [KeyboardButton(text="🤝 Mijozlar"), KeyboardButton(text="🤝 Taminotchilar")],
             [KeyboardButton(text="💸 Xarajatlar"), KeyboardButton(text="🏪 Mahsulotlar")],
             [ KeyboardButton(text="📂 Kategoriyalar"),KeyboardButton(text="📦 Buyurtmalar")],
-            [ KeyboardButton(text="📦 Ombor _Holati_")]
+            [ KeyboardButton(text="📦 Ombor _Holati_"),KeyboardButton(text="💸 Sof Foyda")]
         ],
         resize_keyboard=True
     )

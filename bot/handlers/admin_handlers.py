@@ -2493,3 +2493,18 @@ async def transfer_history(message: Message, user, state: FSMContext):
 
         await message.answer(text)
 
+
+@router.message(F.text == "💸 Sof Foyda")
+async def foyda(message: Message, user, state: FSMContext):
+    if not user.is_staff:
+        await message.answer("❌ Sizda bu bo‘limga kirish huquqi yo‘q")
+        return
+   
+    benefit = await sync_to_async(list)(Benefit.objects.all().order_by('-id')[ :12 ])
+    for b in benefit:
+        text = (
+            f"📅 Sana: {b.date.strftime('%Y-%m-%d')}\n"
+            f"💰 summa: {b.percentage} \n"
+            f"{'-'*35}\n"
+        )
+        await message.answer(text)
