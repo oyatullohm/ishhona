@@ -393,13 +393,6 @@ class Production(models.Model):
     date = models.DateField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        from datetime import date
-        today =  date.today()
-        first_day_of_month = today.replace(day=1)
-        benefit, created = Benefit.objects.get_or_create(date=first_day_of_month)
-        benefit_value = Decimal(self.product.product_price.benefit or 0)
-        benefit.percentage += Decimal(self.quantity) * benefit_value
-        benefit.save()
         is_new = self.pk is None
         if is_new:
             self.summa = Decimal(self.quantity) * Decimal(self.product.product_price.salary)
