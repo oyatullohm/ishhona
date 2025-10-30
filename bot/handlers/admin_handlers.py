@@ -1938,9 +1938,9 @@ async def product_menu(message: Message, user):
             f"🆔 ID: {p.product_price.id}\n"
             f"💰 Sotilish narxi: {p.product_price.selling_price:,} so‘m\n"
             f"👷 Ishlab chiqarish xarajati (ish haqi): {p.product_price.salary:,} so‘m\n"
-            f"💵 Dollardagi narh: {p.product_price.total_cost_usd:,} $\n"
-            f"💵 Sof foyda: {p.product_price.benefit} so'm\n"
-            f"🇺🇿 So‘mdagi narh: {p.product_price.total_cost_uzs:,} so‘m\n\n"
+            f"💵 Asil Narh: {p.product_price.benefit} so'm\n"
+            f"💵 Dollardagi narh Tahmin: {p.product_price.total_cost_usd:,} $\n"
+            f"🇺🇿 So‘mdagi narh tahmin: {p.product_price.total_cost_uzs:,} so‘m\n\n"
             f"📊 Miqdor: {p.quantity}\n"
             f"🧾 Jami summa: {p.total_cost:,} so‘m\n"
             
@@ -2017,9 +2017,9 @@ async def product_foyda(message: Message, state: FSMContext):
         f"🆔 ID: {p.id}\n"
         f"💰 Sotilish narxi: {int(p.selling_price):,} so‘m\n"
         f"👷 Ishlab chiqarish xarajati (ish haqi): {int(p.salary):,} so‘m\n"
-        f"💵 Dollardagi narh: {p.total_cost_usd:,.2f} $\n"
-        f"💵 Sof foyda: {p.benefit} so‘m\n"
-        f"🇺🇿 So‘mdagi narh: {p.total_cost_uzs:,.2f} so‘m\n"
+        f"💵 Asil Tan Narh: {p.benefit} so‘m\n"
+        f"💵 Dollardagi narh Tahmin: {p.total_cost_usd:,.2f} $\n"
+        f"🇺🇿 So‘mdagi narh Tahmin: {p.total_cost_uzs:,.2f} so‘m\n"
     )
 
     await message.answer(
@@ -2406,6 +2406,7 @@ async def select_from_kassa__(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("💸 Qaysi kassaga pul o'tkazamiz? Tanlang:", reply_markup=kb)
     await state.set_state(TransferMoneyState.to_kassa)  
 # 3. To kassa tanlanganda
+
 @router.callback_query(F.data.startswith("__to_kassa__"))
 async def select_to_kassa(callback: CallbackQuery, state: FSMContext):
     to_kassa_id = int(callback.data.split("_")[-1])

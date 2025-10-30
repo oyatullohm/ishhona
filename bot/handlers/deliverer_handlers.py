@@ -1,6 +1,6 @@
 
 from main.models import (Order, Client,CustomUser,OrderItem,
-                         Product,ClientBalance, Currency)
+                         Product,ClientBalance, Currency,Benefit)
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from bot.keyboards import deliverer_kb
@@ -40,6 +40,7 @@ async def delivery_orders(message: Message, user):  # user parametri
         reply_markup=deliverer_kb.orders_keyboard(orders)
     )
 #byurtmani tanlash
+
 @router.callback_query(F.data.startswith("deliver_item_edit_"))
 async def select_order_for_edit(callback: CallbackQuery, state: FSMContext): 
     order_id = int(callback.data.split("_")[3])
@@ -93,8 +94,16 @@ async def enter_new_price_(message: Message, state: FSMContext):
         data = await state.get_data()
         item_id = data['item_id']
         item = await sync_to_async(OrderItem.objects.select_related('order','product','product__product_price').get)(id=item_id)
+        benefit = await sync_to_async(Benefit.objects.last)()
+        benefit.percentage -= (item.unit_price - item.product.product_price.benefit) * item.quantity 
+        await sync_to_async(benefit.save)()
+        
         item.unit_price = new_price
         await sync_to_async(item.save)()
+        
+        benefit.percentage += item.quantity * (new_price - item.product.product_price.benefit)
+        await sync_to_async(benefit.save)()
+        
         await message.answer(
             f"✅ Narx yangilandi: {item.product.product_price.name} yangi narxi {new_price} so‘m\n\n",
         )
@@ -120,14 +129,20 @@ async def enter_new_quantity_(message: Message, state: FSMContext):
         item_id = data['item_id']
         item = await sync_to_async(OrderItem.objects.select_related('order','product','product__product_price').get)(id=item_id)
         quantity = item.quantity
+        benefit = await sync_to_async(Benefit.objects.last)()
+        price_minus = (item.unit_price - item.product.product_price.benefit) * quantity
+        benefit.percentage -= price_minus
+        await sync_to_async(benefit.save)()
+       
         item.quantity = new_quantity
-        
         product = await sync_to_async(Product.objects.select_related('product_price').get)(id=item.product.id)
         product.quantity += quantity
         product.quantity -= new_quantity
         await sync_to_async(product.save)()
         
         await sync_to_async(item.save)()
+        benefit.percentage += (item.unit_price - item.product.product_price.benefit) * new_quantity
+        await sync_to_async(benefit.save)()
         await message.answer(
             f"✅ Miqdor yangilandi: {item.product.product_price.name} yangi miqdori {new_quantity} ta\n\n",
         )
@@ -153,8 +168,14 @@ async def select_product_edit_(callback: CallbackQuery, state: FSMContext):
     item = await sync_to_async(OrderItem.objects.select_related('order','product','product__product_price').get)(id=item_id)
     product = await sync_to_async(Product.objects.select_related('product_price').get)(id=product_id)
     item.product = product
+    benefit = await sync_to_async(Benefit.objects.last)()
+    benefit.percentage -=(item.unit_price - item.product.product_price.benefit) * item.quantity
+    await sync_to_async(benefit.save)()
     item.unit_price = product.product_price.selling_price
     await sync_to_async(item.save)()
+    benefit.percentage += item.quantity * (item.unit_price - item.product.product_price.benefit)
+    await sync_to_async(benefit.save)()
+    
     await callback.message.answer(
         f"✅ Mahsulot yangilandi: Yangi mahsulot {product.product_price.name}\n\n",
     )
@@ -169,6 +190,9 @@ async def delete_order_item(callback: CallbackQuery, state: FSMContext):
     quantity = item.quantity
     product = await sync_to_async(Product.objects.select_related('product_price').get)(id=item.product.id)
     product.quantity += quantity
+    benefit = await sync_to_async(Benefit.objects.last)()
+    benefit.percentage -= item.quantity * (item.unit_price - item.product.product_price.benefit)
+    await sync_to_async(benefit.save)()
     await sync_to_async(product.save)()
     await sync_to_async(item.delete)()
     order = await sync_to_async(Order.objects.prefetch_related('items').select_related('client','base_currency').get)(id=item.order.id)

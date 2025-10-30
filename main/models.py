@@ -467,7 +467,15 @@ class OrderItem(models.Model):
     class Meta:
         verbose_name = "Buyurtma elementi"
         verbose_name_plural = "Buyurtma elementlari"
-    
+    def save(self, *args, **kwargs):
+        from datetime import date
+        today =  date.today()
+        first_day_of_month = today.replace(day=1)
+        benefit, created = Benefit.objects.get_or_create(date=first_day_of_month)
+        benefit_value = Decimal(self.unit_price) - Decimal(self.product.product_price.benefit) 
+        benefit.percentage += Decimal(self.quantity) * benefit_value
+        benefit.save()
+        super().save(*args, **kwargs)
 
 class Transfer(models.Model):
     from_kassa = models.ForeignKey(Kassa, on_delete=models.SET_NULL, null=True, blank=True , related_name='transfers_out')

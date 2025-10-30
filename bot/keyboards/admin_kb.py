@@ -53,7 +53,7 @@ def product_price_inline_buttons(product_id):
         ],
         [
             InlineKeyboardButton(
-                text="Sof foydani o‘zgartirish",
+                text="Sof Tan Narhini o'zgartirish 💵",
                 callback_data=f"edit_foyda:{product_id}"
             )
         ]
