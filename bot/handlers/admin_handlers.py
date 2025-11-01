@@ -1,4 +1,4 @@
-from django.db.models import Q, Sum, Count, ExpressionWrapper, DecimalField
+from django.db.models import Q, Sum, Count, ExpressionWrapper, DecimalField, F as AF
 from django.db.models.functions import TruncMonth
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, StateFilter
@@ -2579,7 +2579,7 @@ async def orders_stat(message: Message, user):
             total_quantity=Sum('quantity'),
             total_summa=Sum(
                 ExpressionWrapper(
-                    F('quantity') * F('unit_price'),
+                    AF('quantity') * AF('unit_price'),
                     output_field=DecimalField(max_digits=15, decimal_places=2)
                 )
             )
