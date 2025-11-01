@@ -2494,6 +2494,58 @@ async def transfer_history(message: Message, user, state: FSMContext):
         await message.answer(text)
 
 
+@router.message(F.text == "📊 Statistica")
+async def statistik_menue(message: Message, user ):
+    if not user.is_staff :
+        await message.answer("❌ Sizda bu bo‘limga kirish huquqi yo‘q")
+        return
+    await message.answer('Statistica', reply_markup=admin_kb.admin_statistica())
+
+@router.message(F.text == "📦 ishlab chiqarildi")
+async def prodicton(message: Message, user):
+    if not user.is_staff:
+        await message.answer("❌ Sizda bu bo‘limga kirish huquqi yo‘q")
+        return
+
+    today = date.today()
+    six_months_ago = today.replace(day=1) - timedelta(days=180)
+
+    # 🔹 So‘nggi 6 oydagi ishlab chiqarish
+    data = await sync_to_async(list)(
+        Production.objects.select_related('product__product_price', 'product')
+        .filter(date__gte=six_months_ago)
+        .values('product__product_price__name', 'date__year', 'date__month')
+        .annotate(total_quantity=Sum('quantity'))
+        .order_by('date__year', 'date__month')
+    )
+
+    if not data:
+        await message.answer("📦 So‘nggi 6 oyda ishlab chiqarish mavjud emas.")
+        return
+
+    # 🔸 Ma’lumotlarni oylar bo‘yicha guruhlash
+    grouped = {}
+    for item in data:
+        year = item['date__year']
+        month = item['date__month']
+        name = item['product__product_price__name'] or "🧩 Noma’lum mahsulot"
+        quantity = item['total_quantity'] or 0
+
+        key = f"{year}-{month:02d}"
+        grouped.setdefault(key, [])
+        grouped[key].append((name, quantity))
+
+    # 🔸 Har oy uchun alohida xabar yuborish
+    await message.answer("📦 So‘nggi 6 oy ishlab chiqarish ma’lumotlari:")
+    for month_key, items in grouped.items():
+        total_qty = sum(q for _, q in items)
+        text = f"📅 {month_key}:\n"
+        for name, qty in items:
+            text += f"🔹 {name} — {qty} dona\n"
+        text += f"📊 Jami: {total_qty} dona\n"
+
+        await message.answer(text)
+
 @router.message(F.text == "💸 Sof Foyda")
 async def foyda(message: Message, user, state: FSMContext):
     if not user.is_staff:
@@ -2507,4 +2559,63 @@ async def foyda(message: Message, user, state: FSMContext):
             f"💰 summa: {b.percentage} \n"
             f"{'-'*35}\n"
         )
+        await message.answer(text)
+        
+@router.message(F.text == "🤝 Sotilgan Mahsulotlar")
+async def orders_stat(message: Message, user):
+    if not user.is_staff:
+        await message.answer("❌ Sizda bu bo‘limga kirish huquqi yo‘q")
+        return
+    from django.utils import timezone
+    today = timezone.now().date()
+    six_months_ago = timezone.now().replace(day=1) - timedelta(days=180)
+
+    # 🔹 So‘nggi 6 oydagi buyurtmalarni olish
+    data = await sync_to_async(list)(
+        OrderItem.objects.select_related('product', 'order')
+        .filter(order__date__gte=six_months_ago)
+        .values('product__product_price__name', 'order__date__year', 'order__date__month')
+        .annotate(
+            total_quantity=Sum('quantity'),
+            total_summa=Sum('unit_price')
+        )
+        .order_by('order__date__year', 'order__date__month')
+    )
+
+    if not data:
+        await message.answer("📦 So‘nggi 6 oyda buyurtmalar mavjud emas.")
+        return
+
+    # 🔸 Ma’lumotlarni oy bo‘yicha guruhlash
+    grouped = {}
+    for item in data:
+        year = item['order__date__year']
+        month = item['order__date__month']
+        name = item['product__product_price__name'] or "🧩 Noma’lum mahsulot"
+        qty = item['total_quantity'] or 0
+        summa = item['total_summa'] or 0
+
+        key = f"{year}-{month:02d}"
+        grouped.setdefault(key, [])
+        grouped[key].append((name, qty, summa))
+
+    # 🔸 Oy nomlarini o‘zbekcha qilish
+    oylar = [
+        "yanvar", "fevral", "mart", "aprel", "may", "iyun",
+        "iyul", "avgust", "sentyabr", "oktyabr", "noyabr", "dekabr"
+    ]
+
+    # 🔸 Har oy uchun alohida xabar yuborish
+    await message.answer("📦 So‘nggi 6 oy buyurtmalar statistikasi:")
+    for key, items in grouped.items():
+        year, month = key.split('-')
+        oy_nomi = oylar[int(month) - 1]
+        total_qty = sum(i[1] for i in items)
+        total_summa = sum(i[2] for i in items)
+
+        text = f"📅 {year}-yil {oy_nomi} oyi:\n"
+        for name, qty, summa in items:
+            text += f"🔹 {name} — {qty} dona, {summa:,.0f} so‘m\n"
+        text += f"📊 Jami: {total_qty} dona — {total_summa:,.0f} so‘m\n"
+
         await message.answer(text)

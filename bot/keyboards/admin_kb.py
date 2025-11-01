@@ -12,10 +12,22 @@ def admin_main_menu():
             [KeyboardButton(text="🤝 Mijozlar"), KeyboardButton(text="🤝 Taminotchilar")],
             [KeyboardButton(text="💸 Xarajatlar"), KeyboardButton(text="🏪 Mahsulotlar")],
             [ KeyboardButton(text="📂 Kategoriyalar"),KeyboardButton(text="📦 Buyurtmalar")],
-            [ KeyboardButton(text="📦 Ombor _Holati_"),KeyboardButton(text="💸 Sof Foyda")]
+            [ KeyboardButton(text="📦 Ombor _Holati_"),KeyboardButton(text="📊 Statistica")]
         ],
         resize_keyboard=True
     )
+
+def admin_statistica():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🏠 Admin Bosh Menyu")],
+            [ KeyboardButton(text="📦 ishlab chiqarildi"),KeyboardButton(text="💸 Sof Foyda")],
+            [ KeyboardButton(text="🤝 Sotilgan Mahsulotlar")],
+        ],
+        resize_keyboard=True
+    )
+
+
 
 def  product_menu():
      return ReplyKeyboardMarkup(
