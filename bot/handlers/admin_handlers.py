@@ -1,9 +1,9 @@
+from django.db.models import Q, Sum, Count, ExpressionWrapper, DecimalField
 from django.db.models.functions import TruncMonth
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, StateFilter
 from datetime import datetime, timedelta, date
 from aiogram.fsm.context import FSMContext
-from django.db.models import Q, Sum, Count
 from asgiref.sync import sync_to_async
 from django.utils.timezone import now
 from bot.keyboards.admin_kb import *
@@ -2577,7 +2577,12 @@ async def orders_stat(message: Message, user):
         .values('product__product_price__name', 'order__date__year', 'order__date__month')
         .annotate(
             total_quantity=Sum('quantity'),
-            total_summa=Sum('unit_price')
+            total_summa=Sum(
+                ExpressionWrapper(
+                    F('quantity') * F('unit_price'),
+                    output_field=DecimalField(max_digits=15, decimal_places=2)
+                )
+            )
         )
         .order_by('order__date__year', 'order__date__month')
     )
@@ -2593,7 +2598,7 @@ async def orders_stat(message: Message, user):
         month = item['order__date__month']
         name = item['product__product_price__name'] or "🧩 Noma’lum mahsulot"
         qty = item['total_quantity'] or 0
-        summa = item['total_summa'] * qty or 0
+        summa = item['total_summa']  or 0
 
         key = f"{year}-{month:02d}"
         grouped.setdefault(key, [])
