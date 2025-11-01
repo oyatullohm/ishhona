@@ -2593,7 +2593,7 @@ async def orders_stat(message: Message, user):
         month = item['order__date__month']
         name = item['product__product_price__name'] or "🧩 Noma’lum mahsulot"
         qty = item['total_quantity'] or 0
-        summa = item['total_summa'] or 0
+        summa = item['total_summa'] * qty or 0
 
         key = f"{year}-{month:02d}"
         grouped.setdefault(key, [])
